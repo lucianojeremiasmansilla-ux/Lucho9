@@ -1,0 +1,135 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --sidebar-width: 260px;
+}
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: #0a0b0e;
+    color: #e8eaf0;
+    font-family: var(--font-geist-sans), ui-sans-serif, system-ui;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #2a303c;
+    border-radius: 999px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #3a4155;
+  }
+
+  /* Selection */
+  ::selection {
+    background: rgba(79, 142, 247, 0.25);
+    color: #e8eaf0;
+  }
+}
+
+@layer components {
+  /* Glass card effect */
+  .glass-card {
+    background: rgba(17, 19, 24, 0.8);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid #1e2330;
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 4px 24px rgba(0, 0, 0, 0.4);
+  }
+
+  /* Input base */
+  .input-base {
+    background: #111318;
+    border: 1px solid #1e2330;
+    color: #e8eaf0;
+    border-radius: 0.75rem;
+    padding: 0.625rem 1rem;
+    font-size: 0.875rem;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    outline: none;
+  }
+
+  .input-base:focus {
+    border-color: rgba(79, 142, 247, 0.5);
+    box-shadow: 0 0 0 3px rgba(79, 142, 247, 0.08);
+  }
+
+  .input-base::placeholder {
+    color: #4a5068;
+  }
+
+  /* Button variants */
+  .btn-primary {
+    background: #4f8ef7;
+    color: #0a0b0e;
+    font-weight: 600;
+    border-radius: 0.625rem;
+    padding: 0.5rem 1.25rem;
+    font-size: 0.875rem;
+    transition: all 0.15s ease;
+    border: none;
+    cursor: pointer;
+  }
+
+  .btn-primary:hover {
+    background: #6aa3ff;
+    box-shadow: 0 0 20px rgba(79, 142, 247, 0.3);
+  }
+
+  .btn-ghost {
+    background: transparent;
+    color: #8b91a8;
+    border-radius: 0.625rem;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    transition: all 0.15s ease;
+    border: none;
+    cursor: pointer;
+  }
+
+  .btn-ghost:hover {
+    background: #191c23;
+    color: #e8eaf0;
+  }
+}
+
+/* Typing indicator animation */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.2; }
+}
+
+.typing-dot {
+  animation: blink 1.2s ease-in-out infinite;
+}
+
+.typing-dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.typing-dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
