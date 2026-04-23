@@ -1,0 +1,466 @@
+"use client";
+
+import { useState, useRef, useEffect } from "react";
+import {
+  BookOpen,
+  Music,
+  Calendar,
+  Mail,
+  Plus,
+  Send,
+  Paperclip,
+  Mic,
+  ChevronRight,
+  Sparkles,
+  Clock,
+  Hash,
+  Settings,
+  Search,
+  MoreHorizontal,
+  Zap,
+  CheckSquare,
+  User,
+} from "lucide-react";
+
+// ─── Types ───────────────────────────────────────────────────────────────────
+
+interface Materia {
+  id: string;
+  nombre: string;
+  color: string;
+  icono: React.ReactNode;
+  contador: number;
+}
+
+interface Mensaje {
+  id: string;
+  rol: "usuario" | "asistente";
+  contenido: string;
+  timestamp: Date;
+}
+
+// ─── Data inicial ─────────────────────────────────────────────────────────────
+
+const MATERIAS_INICIALES: Materia[] = [
+  {
+    id: "general",
+    nombre: "General",
+    color: "#4f8ef7",
+    icono: <Sparkles size={14} />,
+    contador: 12,
+  },
+  {
+    id: "tareas",
+    nombre: "Tareas",
+    color: "#3ecf8e",
+    icono: <CheckSquare size={14} />,
+    contador: 5,
+  },
+  {
+    id: "calendario",
+    nombre: "Calendario",
+    color: "#f97316",
+    icono: <Calendar size={14} />,
+    contador: 3,
+  },
+  {
+    id: "estudio",
+    nombre: "Estudio",
+    color: "#a78bfa",
+    icono: <BookOpen size={14} />,
+    contador: 8,
+  },
+  {
+    id: "musica",
+    nombre: "Spotify",
+    color: "#3ecf8e",
+    icono: <Music size={14} />,
+    contador: 0,
+  },
+  {
+    id: "correo",
+    nombre: "Gmail",
+    color: "#f43f5e",
+    icono: <Mail size={14} />,
+    contador: 2,
+  },
+];
+
+const MENSAJES_BIENVENIDA: Mensaje[] = [
+  {
+    id: "1",
+    rol: "asistente",
+    contenido:
+      "Hola. Soy tu asistente personal. Puedo ayudarte a gestionar tareas, organizar tu agenda, buscar información o controlar tu música. ¿Por dónde empezamos?",
+    timestamp: new Date(),
+  },
+];
+
+// ─── Subcomponentes ───────────────────────────────────────────────────────────
+
+function MateriaItem({
+  materia,
+  activa,
+  onClick,
+}: {
+  materia: Materia;
+  activa: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left transition-all duration-150 group ${
+        activa
+          ? "bg-surface-2 text-text-primary"
+          : "text-text-secondary hover:bg-surface-1 hover:text-text-primary"
+      }`}
+    >
+      {/* Color dot + icon */}
+      <span
+        className="flex items-center justify-center w-7 h-7 rounded-lg flex-shrink-0"
+        style={{
+          background: activa ? `${materia.color}22` : "transparent",
+          color: activa ? materia.color : "currentColor",
+          border: activa ? `1px solid ${materia.color}33` : "1px solid transparent",
+        }}
+      >
+        {materia.icono}
+      </span>
+
+      <span className="flex-1 text-sm font-medium truncate">{materia.nombre}</span>
+
+      {materia.contador > 0 && (
+        <span
+          className="text-xs px-1.5 py-0.5 rounded-md font-mono"
+          style={{
+            background: activa ? `${materia.color}22` : "#21252f",
+            color: activa ? materia.color : "#4a5068",
+          }}
+        >
+          {materia.contador}
+        </span>
+      )}
+    </button>
+  );
+}
+
+function MensajeBurbuja({ mensaje }: { mensaje: Mensaje }) {
+  const esUsuario = mensaje.rol === "usuario";
+
+  return (
+    <div
+      className={`flex gap-3 animate-slide-up ${esUsuario ? "flex-row-reverse" : "flex-row"}`}
+    >
+      {/* Avatar */}
+      <div
+        className={`w-7 h-7 rounded-lg flex-shrink-0 flex items-center justify-center text-xs font-bold ${
+          esUsuario
+            ? "bg-accent text-surface"
+            : "bg-surface-3 text-text-secondary border border-border"
+        }`}
+      >
+        {esUsuario ? <User size={13} /> : <Sparkles size={13} />}
+      </div>
+
+      {/* Burbuja */}
+      <div
+        className={`max-w-[75%] px-4 py-3 rounded-2xl text-sm leading-relaxed ${
+          esUsuario
+            ? "bg-accent text-surface font-medium rounded-tr-sm"
+            : "bg-surface-2 text-text-primary border border-border rounded-tl-sm"
+        }`}
+      >
+        {mensaje.contenido}
+        <div
+          className={`text-[10px] mt-1.5 ${
+            esUsuario ? "text-blue-200/60" : "text-text-muted"
+          }`}
+        >
+          {mensaje.timestamp.toLocaleTimeString("es-AR", {
+            hour: "2-digit",
+            minute: "2-digit",
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function IndicadorEscribiendo() {
+  return (
+    <div className="flex gap-3">
+      <div className="w-7 h-7 rounded-lg flex-shrink-0 bg-surface-3 border border-border flex items-center justify-center">
+        <Sparkles size={13} className="text-text-secondary" />
+      </div>
+      <div className="bg-surface-2 border border-border px-4 py-3 rounded-2xl rounded-tl-sm">
+        <div className="flex gap-1 items-center h-4">
+          <span className="typing-dot w-1.5 h-1.5 rounded-full bg-text-muted" />
+          <span className="typing-dot w-1.5 h-1.5 rounded-full bg-text-muted" />
+          <span className="typing-dot w-1.5 h-1.5 rounded-full bg-text-muted" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Página principal ─────────────────────────────────────────────────────────
+
+export default function Dashboard() {
+  const [materiaActiva, setMateriaActiva] = useState("general");
+  const [mensajes, setMensajes] = useState<Mensaje[]>(MENSAJES_BIENVENIDA);
+  const [input, setInput] = useState("");
+  const [escribiendo, setEscribiendo] = useState(false);
+  const [busqueda, setBusqueda] = useState("");
+
+  const chatEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [mensajes, escribiendo]);
+
+  const handleEnviar = async () => {
+    if (!input.trim()) return;
+
+    const nuevoMensaje: Mensaje = {
+      id: Date.now().toString(),
+      rol: "usuario",
+      contenido: input.trim(),
+      timestamp: new Date(),
+    };
+
+    setMensajes((prev) => [...prev, nuevoMensaje]);
+    setInput("");
+    setEscribiendo(true);
+
+    // Simulación de respuesta — aquí irá la llamada a Gemini vía API route
+    await new Promise((r) => setTimeout(r, 1400));
+
+    const respuesta: Mensaje = {
+      id: (Date.now() + 1).toString(),
+      rol: "asistente",
+      contenido:
+        "Entendido. Estoy procesando tu solicitud. En la próxima fase conectaré con Gemini 1.5 Pro para darte una respuesta completa y contextual.",
+      timestamp: new Date(),
+    };
+
+    setEscribiendo(false);
+    setMensajes((prev) => [...prev, respuesta]);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleEnviar();
+    }
+  };
+
+  const materiaActivaObj = MATERIAS_INICIALES.find((m) => m.id === materiaActiva);
+
+  return (
+    <div className="flex h-screen bg-surface overflow-hidden">
+      {/* ── SIDEBAR ─────────────────────────────────────────────────── */}
+      <aside className="w-[260px] flex-shrink-0 border-r border-border flex flex-col bg-surface/80 backdrop-blur-xl">
+        {/* Logo / Header */}
+        <div className="px-5 py-5 border-b border-border-subtle">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-accent flex items-center justify-center">
+              <Zap size={15} className="text-surface" />
+            </div>
+            <div>
+              <h1 className="text-sm font-bold text-text-primary tracking-tight">
+                Asistente
+              </h1>
+              <p className="text-[10px] text-text-muted font-mono uppercase tracking-widest">
+                Personal AI
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Search */}
+        <div className="px-3 pt-4 pb-2">
+          <div className="relative">
+            <Search
+              size={13}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted"
+            />
+            <input
+              type="text"
+              placeholder="Buscar materia..."
+              value={busqueda}
+              onChange={(e) => setBusqueda(e.target.value)}
+              className="input-base w-full pl-8 pr-3 py-2 text-xs"
+            />
+          </div>
+        </div>
+
+        {/* Materias */}
+        <div className="flex-1 overflow-y-auto px-3 pb-3">
+          <div className="flex items-center justify-between px-1 py-2 mb-1">
+            <span className="text-[10px] font-semibold text-text-muted uppercase tracking-widest">
+              Materias
+            </span>
+            <button className="w-5 h-5 rounded-md hover:bg-surface-2 flex items-center justify-center transition-colors">
+              <Plus size={11} className="text-text-muted" />
+            </button>
+          </div>
+
+          <nav className="space-y-0.5">
+            {MATERIAS_INICIALES.filter((m) =>
+              m.nombre.toLowerCase().includes(busqueda.toLowerCase())
+            ).map((materia) => (
+              <MateriaItem
+                key={materia.id}
+                materia={materia}
+                activa={materiaActiva === materia.id}
+                onClick={() => setMateriaActiva(materia.id)}
+              />
+            ))}
+          </nav>
+
+          {/* Nueva materia */}
+          <button className="w-full mt-3 flex items-center gap-2 px-3 py-2 rounded-xl border border-dashed border-border text-text-muted hover:border-border-strong hover:text-text-secondary transition-all text-xs">
+            <Plus size={13} />
+            Nueva materia
+          </button>
+        </div>
+
+        {/* Footer del sidebar */}
+        <div className="px-3 pb-4 pt-3 border-t border-border-subtle space-y-0.5">
+          <button className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-text-secondary hover:bg-surface-1 hover:text-text-primary transition-all text-sm">
+            <Clock size={14} />
+            Historial
+          </button>
+          <button className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-text-secondary hover:bg-surface-1 hover:text-text-primary transition-all text-sm">
+            <Settings size={14} />
+            Configuración
+          </button>
+        </div>
+      </aside>
+
+      {/* ── MAIN CONTENT ────────────────────────────────────────────── */}
+      <main className="flex-1 flex flex-col min-w-0">
+        {/* Top bar */}
+        <header className="flex items-center justify-between px-6 py-4 border-b border-border flex-shrink-0">
+          <div className="flex items-center gap-2 text-sm text-text-secondary">
+            <Hash size={13} className="text-text-muted" />
+            <span className="font-medium text-text-primary">
+              {materiaActivaObj?.nombre ?? "General"}
+            </span>
+            <ChevronRight size={13} className="text-text-muted" />
+            <span className="text-text-muted">Chat</span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {/* Integraciones rápidas */}
+            <div className="flex items-center gap-1 mr-2">
+              {[
+                { icon: <Mail size={13} />, label: "Gmail", color: "#f43f5e" },
+                {
+                  icon: <Calendar size={13} />,
+                  label: "Calendar",
+                  color: "#4f8ef7",
+                },
+                {
+                  icon: <Music size={13} />,
+                  label: "Spotify",
+                  color: "#3ecf8e",
+                },
+              ].map(({ icon, label, color }) => (
+                <button
+                  key={label}
+                  title={label}
+                  className="w-7 h-7 rounded-lg hover:bg-surface-2 flex items-center justify-center transition-colors"
+                  style={{ color }}
+                >
+                  {icon}
+                </button>
+              ))}
+            </div>
+
+            <button className="btn-ghost p-2 rounded-lg">
+              <MoreHorizontal size={15} />
+            </button>
+
+            {/* Avatar usuario */}
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-accent to-purple-500 flex items-center justify-center text-xs font-bold text-white">
+              U
+            </div>
+          </div>
+        </header>
+
+        {/* Chat messages */}
+        <div className="flex-1 overflow-y-auto px-6 py-6 space-y-4">
+          {mensajes.map((mensaje) => (
+            <MensajeBurbuja key={mensaje.id} mensaje={mensaje} />
+          ))}
+
+          {escribiendo && <IndicadorEscribiendo />}
+
+          <div ref={chatEndRef} />
+        </div>
+
+        {/* Input área */}
+        <div className="px-6 pb-6 pt-3 flex-shrink-0">
+          <div className="glass-card rounded-2xl p-3">
+            <textarea
+              ref={inputRef}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Escribí tu mensaje... (Enter para enviar, Shift+Enter para nueva línea)"
+              rows={1}
+              className="w-full bg-transparent text-sm text-text-primary placeholder:text-text-muted resize-none outline-none leading-relaxed"
+              style={{ maxHeight: "120px" }}
+              onInput={(e) => {
+                const target = e.target as HTMLTextAreaElement;
+                target.style.height = "auto";
+                target.style.height = `${Math.min(target.scrollHeight, 120)}px`;
+              }}
+            />
+
+            <div className="flex items-center justify-between mt-3">
+              <div className="flex gap-1">
+                <button
+                  className="w-8 h-8 rounded-lg hover:bg-surface-2 flex items-center justify-center text-text-muted hover:text-text-secondary transition-colors"
+                  title="Adjuntar archivo"
+                >
+                  <Paperclip size={15} />
+                </button>
+                <button
+                  className="w-8 h-8 rounded-lg hover:bg-surface-2 flex items-center justify-center text-text-muted hover:text-text-secondary transition-colors"
+                  title="Nota de voz"
+                >
+                  <Mic size={15} />
+                </button>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] text-text-muted font-mono">
+                  {input.length > 0 ? `${input.length} car.` : ""}
+                </span>
+                <button
+                  onClick={handleEnviar}
+                  disabled={!input.trim() || escribiendo}
+                  className="w-8 h-8 rounded-xl flex items-center justify-center transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                  style={{
+                    background: input.trim() ? "#4f8ef7" : "#21252f",
+                    color: input.trim() ? "#0a0b0e" : "#4a5068",
+                  }}
+                >
+                  <Send size={14} />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <p className="text-center text-[10px] text-text-muted mt-2">
+            Gemini 1.5 Pro · Fase 1 — sin conexión activa
+          </p>
+        </div>
+      </main>
+    </div>
+  );
+}
